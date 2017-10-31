@@ -7,21 +7,24 @@
 
 class Circle{
 protected:
-    int isJumping = 0;
-    float radius;
+    int isJumping;
+    float radius1;
+    float radius2;
     float color[3];
-    float centerx;
-    float centery;
+    float cx;
+    float cy;
 
 public:
     Circle();
-    Circle(float centerx, float centery, float radius, float color[3]);
+    Circle(float cx, float cy, float radius, float color[3]);
+    Circle(float cx,float cy,float radius1, float radius2, float color[3]);
     void setRadius(float radius);
     void setColors(float* colors);
-    void draw();
-    void setCenter(float x, float y);
-    float getCenterX();
-    float getCenterY();
+    void draw(int type);
+    void drawCircle(int type);
+    void setc(float x, float y);
+    float getcX();
+    float getcY();
     float getRadius();
     void moveX(float ds);
     void moveY(float ds);

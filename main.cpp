@@ -35,34 +35,35 @@ Circle* outer = nullptr;
 Circle* inner = nullptr;
 vector<Circle*> enemies;
 vector<Circle*> obstacles;
-Circle* player = nullptr;
-//Player* player = nullptr;
+//Circle* player = nullptr;
+Player* player = nullptr;
 
 
-void Timer(int valor){
-  player->jump();
-}
+
 
 //incrementos
-float ds = 0.5;
+float ds = 0.1;
+float dtheta = 1;
+float velPlayer;
+float velTiro;
 
 void init(void) {
   glClearColor(0.0,0.0,0.0,0.0);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  glOrtho(outer->getCenterX()-outer->getRadius(), outer->getCenterX()+outer->getRadius(), outer->getCenterY()-outer->getRadius(), outer->getCenterY()+outer->getRadius(), -1.0, 1.0);
+  glOrtho(outer->getcX()-outer->getRadius(), outer->getcX()+outer->getRadius(), outer->getcY()-outer->getRadius(), outer->getcY()+outer->getRadius(), -1.0, 1.0);
 }
 
 void display(void) {
   glClear(GL_COLOR_BUFFER_BIT);
   //if(outer!=nullptr)
-  outer->draw();
-  inner->draw();
+  outer->draw(1);
+  inner->draw(1);
   for(aux : enemies){
-    aux->draw();
+    aux->draw(1);
   }
   for(aux : obstacles){
-    aux->draw();
+    aux->draw(1);
   }
   player->draw();
   //teste->Draw();
@@ -79,14 +80,21 @@ void keyUp(unsigned char key, int x, int y){
   keyboard[key] = 0;
 }
 
+void stopJumping(int nada){
+  while(player->radius!=player->oldRadius){
+    player->radius-=0.1;
+  }
+  player->isJumping = 0;
+}
+
 void idle(){
-  if(keyboard['a']){
+  if(keyboard['a']){/*
     player->moveX(-ds);
     if(player->colisao(inner)){
       player->moveX(ds);
       return;
     }
-    if(!player->inside(outer)){
+    if(!player->isInside(outer)){
       player->moveX(ds);
     }
     for(enemie : enemies){
@@ -97,6 +105,8 @@ void idle(){
       if(player->colisao(obstacle))
       player->moveX(ds);
     }
+    */
+    player->rotate(dtheta);
 
   }
   if(keyboard['d']){
@@ -105,7 +115,7 @@ void idle(){
       player->moveX(-ds);
       return;
     }
-    if(!player->inside(outer)){
+    if(!player->isInside(outer)){
       player->moveX(-ds);
     }
     for(enemie : enemies){
@@ -118,12 +128,13 @@ void idle(){
     }
   }
   if(keyboard['w']){
-    player->moveY(-ds);
+    //player->moveY(-ds);
+    player->move(ds);
     if(player->colisao(inner)){
       player->moveY(ds);
       return;
     }
-    if(!player->inside(outer)){
+    if(!player->isInside(outer)){
       player->moveY(ds);
     }
     for(enemie : enemies){
@@ -141,7 +152,7 @@ void idle(){
       player->moveY(-ds);
       return;
     }
-    if(!player->inside(outer)){
+    if(!player->isInside(outer)){
       player->moveY(-ds);
     }
     for(enemie : enemies){
@@ -154,7 +165,10 @@ void idle(){
     }
   }
   if(keyboard['p']){
-    glutTimerFunc(2,Timer,2);
+    if(player->isJumping)
+      return;
+    player->jump();
+    glutTimerFunc(1000,stopJumping,0);
   }
   glutPostRedisplay();
 }
@@ -164,29 +178,19 @@ int main(int argc, char** argv) {
     XMLDocument config;
     config.LoadFile(argv[1]);
     string strArena;
+
+    //Le arquivo de configuraçoes
     strArena = string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("caminho"))+
-        string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("nome"))+"."+
-        string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("tipo"));
+    string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("nome"))+"."+
+    string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("tipo"));
+
+    //Le configuraçoes do jogador
+    XMLElement* nodePlayer = config.FirstChildElement("aplicacao")->FirstChildElement("jogador");
+    velPlayer = nodePlayer->FloatAttribute("vel");
+    velTiro = nodePlayer->FloatAttribute("velTiro");
+
+    //Le configuracoes da arena
     LeXML(strArena);
-    //     XMLDocument arena;
-    // arena.LoadFile(strArena.c_str());
-    // XMLElement* svg = arena.FirstChildElement("svg");
-    // XMLElement* azul = svg->FirstChildElement("circle");
-    // outer.setRadius(azul->IntAttribute("r"));
-    // outer.setColors(colorMap[azul->Attribute("fill")]);
-    // outer.setCenter(azul->FloatAttribute("cx"), azul->FloatAttribute("cy"));
-    // XMLElement* white = azul->NextSiblingElement();
-    // inner.setRadius(white->FloatAttribute("r"));
-    // inner.setColors(colorMap[white->Attribute("fill")]);
-    // inner.setCenter(white->FloatAttribute("cx"),white->FloatAttribute("cy"));
-    // while(aux != nullptr){
-    //   int i = 0;
-    //   resto[i].setRadius(aux->FloatAttribute("r"));
-    //   resto[i].setCenter(aux->FloatAttribute("cx"),aux->FloatAttribute("xy"));
-    //   resto[i].setColors(colorMap[aux->Attribute("fill")]);
-    //   aux = aux->NextSiblingElement();
-    //   i++;
-    // }
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
@@ -196,7 +200,7 @@ int main(int argc, char** argv) {
     init();
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
-    glutTimerFunc(2,Timer,2);
+
     glutIdleFunc(idle);
     glutDisplayFunc(display);
     glutMainLoop();
@@ -224,7 +228,7 @@ void LeXML(string nomeArq){
       obstacles.push_back(new Circle(aux->FloatAttribute("cx"),aux->FloatAttribute("cy"),aux->FloatAttribute("r"),colorMap["black"]));
     }
     if(strcmp(aux->Attribute("fill"),("green")) == 0){
-      player = new Circle(aux->FloatAttribute("cx"),aux->FloatAttribute("cy"),aux->FloatAttribute("r"),colorMap["green"]);
+      player = new Player(aux->FloatAttribute("cx"),aux->FloatAttribute("cy"),aux->FloatAttribute("r"),colorMap["green"]);
     }
 
   }

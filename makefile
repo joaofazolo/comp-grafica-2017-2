@@ -1,7 +1,7 @@
 all: trabalhocg
 
 trabalhocg:circle.o tinyxml2.o player.o main.cpp
-	g++ main.cpp circle.o tinyxml2.o player.o -o trabalhocg -std=c++11 -lGL -lglut -lGLU
+	g++ main.cpp circle.o tinyxml2.o player.o -o trabalhocg -std=c++11 -lGL -lglut -lGLU -std=c++1z
 
 circle.o:circle.cpp
 	g++ -c circle.cpp

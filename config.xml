@@ -1,4 +1,4 @@
 <aplicacao>
-	<arquivoDaArena nome="arena" tipo="svg" caminho="/home/2014100472/2017 2/cg/tc3/"></arquivoDaArena>
+	<arquivoDaArena nome="arena" tipo="svg" caminho="/home/2014100472/20172/cg/tc3/"></arquivoDaArena>
 	<jogador velTiro="0.2" vel="0.1"></jogador>
 </aplicacao>
