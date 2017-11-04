@@ -2,6 +2,7 @@
 #include "tinyxml2.h"
 #include "circle.h"
 #include "player.h"
+#include "projectile.h"
 #include <string>
 #include <string.h>
 #include <iostream>
@@ -13,9 +14,8 @@ using namespace std;
 
 int keyboard[256] = {0};
 
-
-
 void LeXML(string nomeArq);
+
 //colors setup
 float blue[] = {0,0,1};
 float white[] = {1,1,1};
@@ -30,20 +30,20 @@ map<const char*,float*> colorMap{
   {"green",green}
 };
 
-//circles
+
 Circle* outer = nullptr;
 Circle* inner = nullptr;
 vector<Circle*> enemies;
 vector<Circle*> obstacles;
-//Circle* player = nullptr;
 Player* player = nullptr;
+vector<Projectile> tiros;
 
 
 
 
 //incrementos
-float ds = 0.1;
-float dtheta = 1;
+float ds = 0.05;
+float dtheta = 0.1;
 float velPlayer;
 float velTiro;
 
@@ -56,7 +56,6 @@ void init(void) {
 
 void display(void) {
   glClear(GL_COLOR_BUFFER_BIT);
-  //if(outer!=nullptr)
   outer->draw(1);
   inner->draw(1);
   for(aux : enemies){
@@ -66,9 +65,6 @@ void display(void) {
     aux->draw(1);
   }
   player->draw();
-  //teste->Draw();
-
-  //glutSwapBuffers();
   glFlush();
 }
 
@@ -80,6 +76,11 @@ void keyUp(unsigned char key, int x, int y){
   keyboard[key] = 0;
 }
 
+void mouse(int x, int y){
+  printf("%d\n",x);
+  player->rotateArm(x,y);
+}
+
 void stopJumping(int nada){
   while(player->radius!=player->oldRadius){
     player->radius-=0.1;
@@ -88,80 +89,48 @@ void stopJumping(int nada){
 }
 
 void idle(){
-  if(keyboard['a']){/*
-    player->moveX(-ds);
-    if(player->colisao(inner)){
-      player->moveX(ds);
-      return;
-    }
-    if(!player->isInside(outer)){
-      player->moveX(ds);
-    }
-    for(enemie : enemies){
-      if(player->colisao(enemie))
-      player->moveX(ds);
-    }
-    for(obstacle : obstacles){
-      if(player->colisao(obstacle))
-      player->moveX(ds);
-    }
-    */
+  if(keyboard['a']){
     player->rotate(dtheta);
+  }
 
-  }
   if(keyboard['d']){
-    player->moveX(ds);
-    if(player->colisao(inner)){
-      player->moveX(-ds);
-      return;
-    }
-    if(!player->isInside(outer)){
-      player->moveX(-ds);
-    }
-    for(enemie : enemies){
-      if(player->colisao(enemie))
-      player->moveX(-ds);
-    }
-    for(obstacle : obstacles){
-      if(player->colisao(obstacle))
-      player->moveX(-ds);
-    }
+    player->rotate(-dtheta);
   }
+
   if(keyboard['w']){
-    //player->moveY(-ds);
-    player->move(ds);
+    player->move(-velPlayer);
     if(player->colisao(inner)){
-      player->moveY(ds);
+      player->move(velPlayer);
       return;
     }
     if(!player->isInside(outer)){
-      player->moveY(ds);
+      player->move(velPlayer);
     }
     for(enemie : enemies){
       if(player->colisao(enemie))
-      player->moveY(ds);
+      player->move(velPlayer);
     }
     for(obstacle : obstacles){
       if(player->colisao(obstacle))
-      player->moveY(ds);
+      player->move(velPlayer);
     }
   }
   if(keyboard['s']){
-    player->moveY(ds);
+    player->move(velPlayer);
     if(player->colisao(inner)){
-      player->moveY(-ds);
+      player->move(-velPlayer);
       return;
     }
     if(!player->isInside(outer)){
-      player->moveY(-ds);
+      player->move(-velPlayer);
     }
     for(enemie : enemies){
       if(player->colisao(enemie))
-      player->moveY(-ds);
+      player->move(-velPlayer);
     }
     for(obstacle : obstacles){
       if(player->colisao(obstacle))
-      player->moveY(-ds);
+      player->move(-velPlayer);
     }
   }
   if(keyboard['p']){
@@ -176,30 +145,33 @@ void idle(){
 int main(int argc, char** argv) {
     //Ler config
     XMLDocument config;
-    config.LoadFile(argv[1]);
+    char* configName = strcat(argv[1],(char*)("config.xml"));
+    config.LoadFile(configName);
     string strArena;
 
-    //Le arquivo de configuraçoes
+    //Ler arquivo de configuraçoes
     strArena = string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("caminho"))+
     string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("nome"))+"."+
     string(config.FirstChildElement("aplicacao")->FirstChildElement("arquivoDaArena")->Attribute("tipo"));
 
-    //Le configuraçoes do jogador
+    //Ler configuraçoes do jogador
     XMLElement* nodePlayer = config.FirstChildElement("aplicacao")->FirstChildElement("jogador");
     velPlayer = nodePlayer->FloatAttribute("vel");
     velTiro = nodePlayer->FloatAttribute("velTiro");
 
-    //Le configuracoes da arena
+    //Ler configuracoes da arena
     LeXML(strArena);
 
+    //configuracoes glut
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(outer->getRadius()*2, outer->getRadius()*2);
     glutInitWindowPosition(100, 100);
-    glutCreateWindow("teste");
+    glutCreateWindow("Trabalho CG 3");
     init();
     glutKeyboardFunc(keyDown);
     glutKeyboardUpFunc(keyUp);
+    glutPassiveMotionFunc(mouse);
 
     glutIdleFunc(idle);
     glutDisplayFunc(display);

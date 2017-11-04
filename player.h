@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <iostream>
 #include "circle.h"
+#include "rectangle.h"
 #include "math.h"
 
 using namespace std;
@@ -26,8 +27,10 @@ public:
   float oldRadius;
   float radius;
   float theta;
+  float thetaArm;
   void rotate(float ds);
   void move(float ds);
+  void rotateArm(float x, float y);
 };
 
 

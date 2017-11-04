@@ -6,10 +6,11 @@
 #include <GL/glu.h>
 
 class Rectangle{
-    float cx, cy, sidex,sidey;
+public:
+    float cx, cy, sidex,sidey, color[3], theta;
 
 public:
-    Rectangle(float cx, float cy, float sidex, float sidey);
+    Rectangle(float cx, float cy, float sidex, float sidey, float color[3]);
     void draw();
 };
 
